@@ -1,6 +1,6 @@
 export const COLS = 8;
 export const ROWS = 8;
-export const TRAY_CELL = 22;
+export const TRAY_CELL = 30;
 export const STORAGE_KEY_BEST = 'spacepuzzle-best';
 
 export const COLORS = [

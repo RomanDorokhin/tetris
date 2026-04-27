@@ -2,12 +2,12 @@ import { COLORS } from './constants.js';
 
 const COLS = 6;
 const ROWS = 4;
-const PAD = 10;
-const CELL = 14;
+const PAD = 12;
+const CELL = 24;
 const BW = COLS * CELL;
 const BH = ROWS * CELL;
 const LOGICAL_W = BW + PAD * 2;
-const LOGICAL_H = BH + PAD + 16;
+const LOGICAL_H = BH + PAD + 20;
 
 const shapeI = [[1, 1, 1]];
 
@@ -18,15 +18,12 @@ let rafId = 0;
 let t0 = 0;
 
 function drawCell(c, x, y, cell, col) {
-  const p = 1;
-  const rad = Math.min(4, cell * 0.2);
-  c.shadowColor = col.glow;
-  c.shadowBlur = 5;
+  const p = 1.5;
+  const rad = Math.min(6, cell * 0.2);
   c.fillStyle = col.fill;
   c.beginPath();
   c.roundRect(x + p, y + p, cell - p * 2, cell - p * 2, rad);
   c.fill();
-  c.shadowBlur = 0;
   c.fillStyle = 'rgba(255,255,255,0.2)';
   c.beginPath();
   c.roundRect(x + p + 1, y + p + 1, cell - p * 2 - 2, (cell - p * 2) * 0.35, rad);
@@ -161,8 +158,8 @@ function frame(now) {
     ctx.restore();
   }
 
-  ctx.fillStyle = 'rgba(255,255,255,0.5)';
-  ctx.font = '600 10px Arial,sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.font = '600 11px Arial,sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText('укладывай блоки · полный ряд исчезает', LOGICAL_W / 2, LOGICAL_H - 5);
 }
