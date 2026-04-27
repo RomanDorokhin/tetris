@@ -17,6 +17,7 @@ import {
 import { loadBest, addScore, refillTray, clearTrayPieces } from './logic.js';
 import { drawBoard, updateParticles, renderAllTray } from './render.js';
 import { createFloatCanvas, bindDragControls } from './drag.js';
+import { startIntroPreview, stopIntroPreview } from './introPreview.js';
 
 function initStars(w, h) {
   STARS.length = 0;
@@ -65,6 +66,7 @@ const scoreEl = document.getElementById('score-el');
 const bestEl = document.getElementById('best-el');
 const overlay = document.getElementById('overlay');
 const introOverlay = document.getElementById('intro-overlay');
+const introPreviewCanvas = document.getElementById('intro-preview-canvas');
 const playBtn = document.getElementById('play-btn');
 const restartBtn = document.getElementById('restart-btn');
 const finalScoreEl = document.getElementById('final-score');
@@ -100,6 +102,7 @@ function gameOver() {
 }
 
 function beginPlaying() {
+  stopIntroPreview();
   overlay.classList.remove('show');
   introOverlay.classList.remove('show');
   setPhase('playing');
@@ -119,6 +122,7 @@ function showIntro() {
   bestEl.textContent = String(best);
   initGrid();
   clearTrayPieces(() => renderAllTray(pieceCanvases));
+  startIntroPreview(introPreviewCanvas);
 }
 
 if (window.Telegram && window.Telegram.WebApp) {
@@ -139,6 +143,7 @@ bgctx = bgCanvas.getContext('2d');
 layout();
 window.addEventListener('resize', () => {
   layout();
+  if (phase === 'intro') startIntroPreview(introPreviewCanvas);
 });
 
 bindDragControls(boardCanvas, pieceCanvases, floatCanvas, fctx, addScoreBound, gameOver);
