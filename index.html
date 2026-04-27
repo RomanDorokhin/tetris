@@ -446,6 +446,7 @@ function updateParticles(){
 const drag={
   active:false,
   pieceIdx:-1,
+  pointerId:null,
   startX:0, startY:0,
   curX:0, curY:0,
   boardRow:null, boardCol:null,
@@ -458,11 +459,6 @@ const floatCanvas=document.createElement('canvas');
 floatCanvas.style.cssText='position:fixed;top:0;left:0;pointer-events:none;z-index:50;display:none;';
 document.body.appendChild(floatCanvas);
 const fctx=floatCanvas.getContext('2d');
-
-function getEventPos(e){
-  const t=e.touches?e.touches[0]:(e.changedTouches?e.changedTouches[0]:e);
-  return {x:t.clientX, y:t.clientY};
-}
 
 function startDrag(pieceIdx, ex, ey){
   const p=trayPieces[pieceIdx];
@@ -503,9 +499,18 @@ function moveDragFloat(ex,ey){
   drag.boardRow=pr;
 }
 
+function cancelDragNoPlace(){
+  if(!drag.active)return;
+  drag.active=false;
+  drag.pointerId=null;
+  floatCanvas.style.display='none';
+  drag.boardRow=null; drag.boardCol=null;
+}
+
 function endDrag(ex,ey){
   if(!drag.active)return;
   drag.active=false;
+  drag.pointerId=null;
   floatCanvas.style.display='none';
 
   const p=trayPieces[drag.pieceIdx];
@@ -528,42 +533,36 @@ function endDrag(ex,ey){
   drag.boardRow=null; drag.boardCol=null;
 }
 
-// ── touch события на канвасах лотка ──
-pieceCanvases.forEach((pc,i)=>{
-  pc.addEventListener('touchstart',e=>{
-    e.preventDefault();
-    const pos=getEventPos(e);
-    startDrag(i,pos.x,pos.y);
-  },{passive:false});
-  pc.addEventListener('mousedown',e=>{
-    e.preventDefault();
-    startDrag(i,e.clientX,e.clientY);
+// Pointer Events + setPointerCapture: move/up/cancel идут на тот же canvas (iOS / WebView / iframe).
+function bindDragControls(){
+  pieceCanvases.forEach((pc,i)=>{
+    pc.addEventListener('pointerdown',e=>{
+      const tp=trayPieces[i];
+      if(!tp||tp.used)return;
+      if(e.button!==0)return;
+      e.preventDefault();
+      try{ pc.setPointerCapture(e.pointerId);}catch(_){}
+      drag.pointerId=e.pointerId;
+      startDrag(i,e.clientX,e.clientY);
+    });
+    pc.addEventListener('pointermove',e=>{
+      if(!drag.active||e.pointerId!==drag.pointerId)return;
+      e.preventDefault();
+      moveDragFloat(e.clientX,e.clientY);
+    });
+    pc.addEventListener('pointerup',e=>{
+      if(!drag.active||e.pointerId!==drag.pointerId)return;
+      e.preventDefault();
+      try{ pc.releasePointerCapture(e.pointerId);}catch(_){}
+      endDrag(e.clientX,e.clientY);
+    });
+    pc.addEventListener('pointercancel',e=>{
+      if(!drag.active||e.pointerId!==drag.pointerId)return;
+      try{ pc.releasePointerCapture(e.pointerId);}catch(_){}
+      cancelDragNoPlace();
+    });
   });
-});
-
-document.addEventListener('touchmove',e=>{
-  if(!drag.active)return;
-  e.preventDefault();
-  const pos=getEventPos(e);
-  moveDragFloat(pos.x,pos.y);
-},{passive:false});
-
-document.addEventListener('mousemove',e=>{
-  if(!drag.active)return;
-  moveDragFloat(e.clientX,e.clientY);
-});
-
-document.addEventListener('touchend',e=>{
-  if(!drag.active)return;
-  e.preventDefault();
-  const pos=getEventPos(e);
-  endDrag(pos.x,pos.y);
-},{passive:false});
-
-document.addEventListener('mouseup',e=>{
-  if(!drag.active)return;
-  endDrag(e.clientX,e.clientY);
-});
+}
 
 // ══════════════════════════════════════
 // ЛОГИКА
@@ -687,6 +686,7 @@ function loop(ts){
 
 layout();
 window.addEventListener('resize',()=>{ layout(); });
+bindDragControls();
 startGame();
 requestAnimationFrame(loop);
 </script>
